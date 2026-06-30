@@ -7,53 +7,85 @@ const supabaseAdmin = createClient(
 );
 
 async function sendTelegram(message: string) {
-  try {
-    const botToken = process.env.TELEGRAM_BOT_TOKEN;
-    const chatId = process.env.TELEGRAM_CHAT_ID;
+  const botToken = process.env.TELEGRAM_BOT_TOKEN;
+  const chatId = process.env.TELEGRAM_CHAT_ID;
 
-    if (!botToken || !chatId) return;
+  if (!botToken || !chatId) return;
 
-    await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        chat_id: chatId,
-        text: message,
-      }),
-    });
-  } catch {
-    // Do not fail payment if Telegram fails
-  }
+  await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ chat_id: chatId, text: message }),
+  });
 }
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
 
-    const data = body?.Data || body?.data;
-    const status = data?.Status || body?.Status;
-    const responseCode = body?.ResponseCode || body?.responseCode;
-    const clientReference = data?.ClientReference || data?.clientReference;
+    console.log("HUBTEL CALLBACK BODY:", JSON.stringify(body, null, 2));
+
+    const data = body?.Data || body?.data || body;
+
+    const clientReference =
+      data?.ClientReference ||
+      data?.clientReference ||
+      body?.ClientReference ||
+      body?.clientReference;
+
+    const status =
+      data?.Status ||
+      data?.status ||
+      body?.Status ||
+      body?.status ||
+      "";
+
+    const responseCode =
+      data?.ResponseCode ||
+      data?.responseCode ||
+      body?.ResponseCode ||
+      body?.responseCode ||
+      "";
+
+    const normalizedStatus = String(status).toLowerCase();
 
     if (!clientReference) {
-      return NextResponse.json(
-        { error: "Missing client reference" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Missing client reference" }, { status: 400 });
     }
 
-    if (responseCode !== "0000" || status !== "Success") {
+    const isSuccessful =
+      responseCode === "0000" ||
+      normalizedStatus === "success" ||
+      normalizedStatus === "successful" ||
+      normalizedStatus === "paid" ||
+      normalizedStatus === "completed";
+
+    const isPending =
+      normalizedStatus === "pending" ||
+      normalizedStatus === "processing" ||
+      normalizedStatus === "ongoing";
+
+    if (isPending) {
       await supabaseAdmin
         .from("user_passes")
         .update({
-          status: "rejected",
-          hubtel_payment_status: status || "failed",
+          hubtel_payment_status: "pending",
         })
         .eq("hubtel_client_reference", clientReference);
 
-      return NextResponse.json({ success: true });
+      return NextResponse.json({ success: true, status: "pending" });
+    }
+
+    if (!isSuccessful) {
+      await supabaseAdmin
+        .from("user_passes")
+        .update({
+          status: "pending_verification",
+          hubtel_payment_status: status || "unknown",
+        })
+        .eq("hubtel_client_reference", clientReference);
+
+      return NextResponse.json({ success: true, status: "not_successful_yet" });
     }
 
     const paidAt = new Date().toISOString();
@@ -62,10 +94,10 @@ export async function POST(request: Request) {
       .from("user_passes")
       .update({
         status: "paid_not_started",
-        hubtel_checkout_id: data?.CheckoutId || null,
+        hubtel_checkout_id: data?.CheckoutId || data?.checkoutId || null,
         hubtel_payment_status: "success",
         paid_at: paidAt,
-        amount: Number(data?.Amount || 250),
+        amount: Number(data?.Amount || data?.amount || 250),
       })
       .eq("hubtel_client_reference", clientReference)
       .select("*")
@@ -80,11 +112,12 @@ export async function POST(request: Request) {
         passData?.username || passData?.user_email || "Unknown user"
       }\nEmail: ${passData?.user_email || "Not added"}\nPhone: ${
         passData?.user_phone || data?.CustomerPhoneNumber || "Not added"
-      }\nAmount: GH₵${data?.Amount || 250}\nReference: ${clientReference}\n\nPass Status: Paid, not started`
+      }\nAmount: GH₵${data?.Amount || data?.amount || 250}\nReference: ${clientReference}\n\nPass Status: Paid, not started`
     );
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, status: "paid_not_started" });
   } catch (error: any) {
+    console.error("Hubtel callback error:", error);
     return NextResponse.json(
       { error: error.message || "Hubtel callback failed" },
       { status: 500 }
