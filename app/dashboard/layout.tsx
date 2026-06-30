@@ -27,6 +27,21 @@ export default function DashboardLayout({
     loadProfile();
   }, []);
 
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = "hidden";
+      document.documentElement.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+      document.documentElement.style.overflow = "";
+    }
+
+    return () => {
+      document.body.style.overflow = "";
+      document.documentElement.style.overflow = "";
+    };
+  }, [mobileMenuOpen]);
+
   async function loadProfile() {
     const {
       data: { user },
@@ -167,8 +182,15 @@ export default function DashboardLayout({
         </header>
 
         {mobileMenuOpen && (
-          <div className="fixed inset-0 z-50 bg-black/45 lg:hidden">
-            <div className="ml-auto h-full w-[75%] max-w-sm overflow-y-auto bg-white p-6 shadow-2xl">
+          <div className="fixed inset-0 z-50 overflow-hidden bg-black/45 lg:hidden">
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen(false)}
+              className="absolute inset-0 h-full w-full"
+              aria-label="Close menu"
+            />
+
+            <div className="relative ml-auto h-full w-[75%] max-w-sm overflow-y-auto bg-white p-6 shadow-2xl">
               <div className="flex items-center justify-between">
                 <h2 className="text-2xl font-black">
                   Rent<span className="text-yellow-500">Direct</span>
