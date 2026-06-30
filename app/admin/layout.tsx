@@ -23,14 +23,14 @@ export default function AdminLayout({
     } = await supabase.auth.getUser();
 
     if (!user) {
-      router.push("/login");
+      router.push("/admin-login");
       return;
     }
 
     const { data: profile } = await supabase
       .from("profiles")
       .select("role")
-      .eq("user_id", user.id)
+      .eq("id", user.id)
       .maybeSingle();
 
     if (profile?.role !== "admin" && profile?.role !== "super_admin") {
