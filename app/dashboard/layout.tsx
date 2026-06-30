@@ -63,7 +63,6 @@ export default function DashboardLayout({
     : "Loading...";
 
   const navItems = [
-    { name: "Dashboard", href: "/dashboard" },
     { name: "Apartments", href: "/dashboard/apartments" },
     { name: "Saved Apartments", href: "/dashboard/favorites" },
     { name: "My Inspections", href: "/dashboard/inspections" },
@@ -96,10 +95,7 @@ export default function DashboardLayout({
 
           <nav className="space-y-2">
             {navItems.map((item) => {
-              const active =
-                item.href === "/dashboard"
-                  ? pathname === "/dashboard"
-                  : pathname.startsWith(item.href);
+              const active = pathname === item.href;
 
               return (
                 <Link
@@ -171,8 +167,8 @@ export default function DashboardLayout({
         </header>
 
         {mobileMenuOpen && (
-          <div className="fixed inset-0 z-50 bg-black/60 lg:hidden">
-            <div className="ml-auto h-full w-[85%] max-w-sm overflow-y-auto bg-white p-6 shadow-2xl">
+          <div className="fixed inset-0 z-50 bg-black/45 lg:hidden">
+            <div className="ml-auto h-full w-[75%] max-w-sm overflow-y-auto bg-white p-6 shadow-2xl">
               <div className="flex items-center justify-between">
                 <h2 className="text-2xl font-black">
                   Rent<span className="text-yellow-500">Direct</span>
@@ -192,34 +188,37 @@ export default function DashboardLayout({
                   Logged in as
                 </p>
                 <p className="mt-2 font-black">{displayName}</p>
-                <p className="mt-1 text-xs text-neutral-500">
+                <p className="mt-1 break-words text-xs text-neutral-500">
                   {profile?.email || ""}
                 </p>
               </div>
 
-              <nav className="mt-6 space-y-2">
-                {navItems.map((item) => {
-                  const active =
-                    item.href === "/dashboard"
-                      ? pathname === "/dashboard"
-                      : pathname.startsWith(item.href);
+              <div className="mt-6">
+                <p className="mb-4 px-1 text-xs font-black uppercase tracking-[0.25em] text-neutral-400">
+                  Dashboard
+                </p>
 
-                  return (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      onClick={() => setMobileMenuOpen(false)}
-                      className={`block rounded-2xl px-4 py-4 font-black ${
-                        active
-                          ? "bg-yellow-400 text-black"
-                          : "bg-neutral-50 text-neutral-700"
-                      }`}
-                    >
-                      {item.name}
-                    </Link>
-                  );
-                })}
-              </nav>
+                <nav className="space-y-2">
+                  {navItems.map((item) => {
+                    const active = pathname === item.href;
+
+                    return (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        onClick={() => setMobileMenuOpen(false)}
+                        className={`block rounded-2xl px-4 py-4 font-black ${
+                          active
+                            ? "bg-yellow-400 text-black"
+                            : "bg-neutral-50 text-neutral-700"
+                        }`}
+                      >
+                        {item.name}
+                      </Link>
+                    );
+                  })}
+                </nav>
+              </div>
 
               <button
                 onClick={handleLogout}
