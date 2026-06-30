@@ -14,13 +14,13 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
-  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
+  async function handleLogin(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);
     setMessage("");
 
     const { data, error } = await supabase.auth.signInWithPassword({
-      email,
+      email: email.trim(),
       password,
     });
 
@@ -32,13 +32,19 @@ export default function LoginPage() {
 
     const userId = data.user?.id;
 
+    if (!userId) {
+      setMessage("Login failed. Please try again.");
+      setLoading(false);
+      return;
+    }
+
     const { data: profile } = await supabase
       .from("profiles")
       .select("role")
-      .eq("id", userId)
-      .single();
+      .eq("user_id", userId)
+      .maybeSingle();
 
-    setMessage("✅ Login successful. Redirecting...");
+    setMessage("Login successful. Redirecting...");
 
     setTimeout(() => {
       if (profile?.role === "super_admin" || profile?.role === "admin") {
@@ -46,13 +52,13 @@ export default function LoginPage() {
       } else {
         router.push("/dashboard");
       }
-    }, 1000);
+    }, 700);
 
     setLoading(false);
-  };
+  }
 
   return (
-    <main className="min-h-screen bg-[#07111F] px-6 pt-32 pb-20 text-white">
+    <main className="min-h-screen bg-[#07111F] px-6 pb-20 pt-32 text-white">
       <div className="mx-auto grid max-w-6xl items-center gap-10 lg:grid-cols-2">
         <section>
           <p className="text-sm font-semibold uppercase tracking-[0.3em] text-yellow-400">
@@ -70,16 +76,16 @@ export default function LoginPage() {
 
           <div className="mt-8 grid gap-4 sm:grid-cols-2">
             <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
-              🏠 Verified apartments
+              Verified apartments
             </div>
             <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
-              💳 30-day access pass
+              30-day access pass
             </div>
             <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
-              📅 Schedule inspections
+              Schedule inspections
             </div>
             <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
-              🚫 No agent fees
+              No agent fees
             </div>
           </div>
         </section>

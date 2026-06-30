@@ -1,10 +1,54 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase";
 
 export default function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const router = useRouter();
+  const [checking, setChecking] = useState(true);
+
+  useEffect(() => {
+    checkAdmin();
+  }, []);
+
+  async function checkAdmin() {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      router.push("/login");
+      return;
+    }
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    if (profile?.role !== "admin" && profile?.role !== "super_admin") {
+      router.push("/dashboard");
+      return;
+    }
+
+    setChecking(false);
+  }
+
+  if (checking) {
+    return (
+      <main className="min-h-screen bg-slate-100 p-10 text-center font-bold text-slate-600">
+        Checking admin access...
+      </main>
+    );
+  }
+
   return (
     <main className="min-h-screen bg-slate-100 text-slate-900">
       <aside className="fixed left-0 top-0 h-screen w-72 bg-[#07111F] px-6 py-8 text-white">
