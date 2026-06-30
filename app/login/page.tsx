@@ -19,8 +19,10 @@ export default function LoginPage() {
     setLoading(true);
     setMessage("");
 
+    const cleanEmail = email.trim().toLowerCase();
+
     const { data, error } = await supabase.auth.signInWithPassword({
-      email: email.trim(),
+      email: cleanEmail,
       password,
     });
 
@@ -31,23 +33,40 @@ export default function LoginPage() {
     }
 
     const userId = data.user?.id;
+    const userEmail = data.user?.email?.toLowerCase();
 
-    if (!userId) {
+    if (!userId || !userEmail) {
       setMessage("Login failed. Please try again.");
       setLoading(false);
       return;
     }
 
-    const { data: profile } = await supabase
+    let role = "user";
+
+    const { data: profileById } = await supabase
       .from("profiles")
       .select("role")
-      .eq("user_id", userId)
+      .eq("id", userId)
       .maybeSingle();
+
+    if (profileById?.role) {
+      role = profileById.role;
+    } else {
+      const { data: profileByEmail } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("email", userEmail)
+        .maybeSingle();
+
+      if (profileByEmail?.role) {
+        role = profileByEmail.role;
+      }
+    }
 
     setMessage("Login successful. Redirecting...");
 
     setTimeout(() => {
-      if (profile?.role === "super_admin" || profile?.role === "admin") {
+      if (role === "super_admin" || role === "admin") {
         router.push("/admin");
       } else {
         router.push("/dashboard");
