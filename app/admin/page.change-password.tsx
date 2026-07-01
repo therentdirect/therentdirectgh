@@ -10,8 +10,6 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [newPassword, setNewPassword] = useState("");
   const [changingPassword, setChangingPassword] = useState(false);
-  const [showTimeoutWarning, setShowTimeoutWarning] = useState(false);
-  const [countdown, setCountdown] = useState(60);
 
   async function handleLogout() {
     await supabase.auth.signOut();
@@ -80,61 +78,6 @@ export default function AdminDashboard() {
     }
 
     protectAdminPage();
-  }, [router]);
-
-  useEffect(() => {
-    let warningTimer: NodeJS.Timeout;
-    let logoutTimer: NodeJS.Timeout;
-    let countdownTimer: NodeJS.Timeout;
-
-    const logoutAdmin = async () => {
-      await supabase.auth.signOut();
-      router.replace("/admin-login");
-    };
-
-    const resetTimer = () => {
-      clearTimeout(warningTimer);
-      clearTimeout(logoutTimer);
-      clearInterval(countdownTimer);
-
-      setShowTimeoutWarning(false);
-      setCountdown(60);
-
-      warningTimer = setTimeout(() => {
-        setShowTimeoutWarning(true);
-        setCountdown(60);
-
-        countdownTimer = setInterval(() => {
-          setCountdown((prev) => {
-            if (prev <= 1) {
-              clearInterval(countdownTimer);
-              return 0;
-            }
-            return prev - 1;
-          });
-        }, 1000);
-      }, 19 * 60 * 1000);
-
-      logoutTimer = setTimeout(logoutAdmin, 20 * 60 * 1000);
-    };
-
-    const activityEvents = ["mousemove", "keydown", "click", "scroll", "touchstart"];
-
-    activityEvents.forEach((event) => {
-      window.addEventListener(event, resetTimer);
-    });
-
-    resetTimer();
-
-    return () => {
-      clearTimeout(warningTimer);
-      clearTimeout(logoutTimer);
-      clearInterval(countdownTimer);
-
-      activityEvents.forEach((event) => {
-        window.removeEventListener(event, resetTimer);
-      });
-    };
   }, [router]);
 
   async function getCount(
@@ -435,27 +378,6 @@ export default function AdminDashboard() {
 
       </section>
 
-      {showTimeoutWarning && (
-        <div className="fixed bottom-6 right-6 z-50 max-w-sm rounded-3xl bg-black p-6 text-white shadow-2xl border border-yellow-400">
-          <h2 className="text-xl font-black text-yellow-400">
-            Session Expiring
-          </h2>
-
-          <p className="mt-3 text-sm text-neutral-300">
-            You will be logged out in {countdown} seconds due to inactivity.
-          </p>
-
-          <button
-            onClick={() => {
-              setShowTimeoutWarning(false);
-              setCountdown(60);
-            }}
-            className="mt-5 rounded-full bg-yellow-400 px-5 py-3 font-black text-black hover:bg-yellow-300"
-          >
-            Stay Logged In
-          </button>
-        </div>
-      )}
     </main>
   );
 }
