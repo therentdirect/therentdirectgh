@@ -40,8 +40,6 @@ type ViewerItem = {
 };
 
 const categories = [
-  const categories = [
-  const categories = [
   "All",
   "Single Room",
   "Single Room (Porch)",
@@ -53,8 +51,6 @@ const categories = [
   "3 Bedroom Apartment",
   "4 Bedroom Apartment",
   "4 Bedrooms+",
-  "Studio",
-  "Studio Apartment",
   "Furnished",
   "Unfurnished",
   "Hostel",
