@@ -24,8 +24,16 @@ export default function SignUpPage() {
     setMessage("");
 
     const { data, error } = await supabase.auth.signUp({
-      email,
+      email: email.trim().toLowerCase(),
       password,
+      options: {
+        data: {
+          first_name: firstName.trim(),
+          last_name: lastName.trim(),
+          username: username.trim(),
+          phone: phone.trim(),
+        },
+      },
     });
 
     if (error) {
