@@ -34,14 +34,21 @@ export default function SignUpPage() {
       return;
     }
 
-    await supabase.from("profiles").insert({
-      user_id: data.user?.id,
-      first_name: firstName,
-      last_name: lastName,
-      username,
-      email,
-      phone,
+    const { error: profileError } = await supabase.from("profiles").insert({
+      id: data.user!.id,
+      first_name: firstName.trim(),
+      last_name: lastName.trim(),
+      username: username.trim(),
+      email: email.trim().toLowerCase(),
+      phone: phone.trim(),
+      role: "user",
     });
+
+    if (profileError) {
+      setMessage(profileError.message);
+      setLoading(false);
+      return;
+    }
 
     setMessage("✅ Account created successfully.");
     router.push("/dashboard");
