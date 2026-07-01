@@ -40,21 +40,19 @@ type ViewerItem = {
 };
 
 const categories = [
+  const categories = [
   "All",
   "Single Room",
   "Single Room (Porch)",
   "Single Self-Contained",
   "Chamber & Hall",
   "Chamber & Hall Self-Contained",
-  "1 Bedroom",
   "1 Bedroom Apartment",
-  "2 Bedroom",
   "2 Bedroom Apartment",
-  "3 Bedroom",
   "3 Bedroom Apartment",
-  "4 Bedroom",
+  "4 Bedroom Apartment",
   "4 Bedrooms+",
-  "Studio",
+  
   "Studio Apartment",
   "Furnished",
   "Unfurnished",
