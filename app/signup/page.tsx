@@ -34,15 +34,18 @@ export default function SignUpPage() {
       return;
     }
 
-    const { error: profileError } = await supabase.from("profiles").insert({
-      id: data.user!.id,
-      first_name: firstName.trim(),
-      last_name: lastName.trim(),
-      username: username.trim(),
-      email: email.trim().toLowerCase(),
-      phone: phone.trim(),
-      role: "user",
-    });
+    const { error: profileError } = await supabase.from("profiles").upsert(
+      {
+        id: data.user!.id,
+        first_name: firstName.trim(),
+        last_name: lastName.trim(),
+        username: username.trim(),
+        email: email.trim().toLowerCase(),
+        phone: phone.trim(),
+        role: "user",
+      },
+      { onConflict: "id" }
+    );
 
     if (profileError) {
       setMessage(profileError.message);
