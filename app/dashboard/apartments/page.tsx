@@ -42,13 +42,25 @@ type ViewerItem = {
 const categories = [
   "All",
   "Single Room",
+  "Single Room (Porch)",
+  "Single Self-Contained",
   "Chamber & Hall",
+  "Chamber & Hall Self-Contained",
   "1 Bedroom",
+  "1 Bedroom Apartment",
   "2 Bedroom",
+  "2 Bedroom Apartment",
   "3 Bedroom",
+  "3 Bedroom Apartment",
+  "4 Bedroom",
+  "4 Bedrooms+",
   "Studio",
+  "Studio Apartment",
   "Furnished",
+  "Unfurnished",
   "Hostel",
+  "Student Accommodation",
+  "Roommate (Shared Apartment)",
 ];
 
 export default function ApartmentsPage() {
@@ -63,10 +75,7 @@ export default function ApartmentsPage() {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All");
   const [activeSlides, setActiveSlides] = useState<Record<string, number>>({});
-  const [viewer, setViewer] = useState<{
-    items: ViewerItem[];
-    index: number;
-  } | null>(null);
+  const [viewer, setViewer] = useState<{ items: ViewerItem[]; index: number } | null>(null);
 
   useEffect(() => {
     loadPageData();
@@ -175,9 +184,7 @@ export default function ApartmentsPage() {
       return;
     }
 
-    const existingFavorite = favorites.find(
-      (item) => item.property_id === propertyId
-    );
+    const existingFavorite = favorites.find((item) => item.property_id === propertyId);
 
     if (existingFavorite) {
       const { error } = await supabase
@@ -357,10 +364,7 @@ export default function ApartmentsPage() {
         ) : (
           <section className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
             {filtered.map((property) => {
-              const isSaved = favorites.some(
-                (item) => item.property_id === property.id
-              );
-
+              const isSaved = favorites.some((item) => item.property_id === property.id);
               const isRented = property.status === "Rented";
               const gallery = getGallery(property);
               const activeIndex = activeSlides[property.id] || 0;
@@ -377,23 +381,13 @@ export default function ApartmentsPage() {
                     {current ? (
                       <button
                         type="button"
-                        onClick={() =>
-                          setViewer({ items: gallery, index: activeIndex })
-                        }
+                        onClick={() => setViewer({ items: gallery, index: activeIndex })}
                         className="h-full w-full"
                       >
                         {current.media_type === "video" ? (
-                          <video
-                            src={current.media_url}
-                            className="h-full w-full object-contain"
-                            muted
-                          />
+                          <video src={current.media_url} className="h-full w-full object-contain" muted />
                         ) : (
-                          <img
-                            src={current.media_url}
-                            className="h-full w-full object-contain"
-                            alt={current.file_name}
-                          />
+                          <img src={current.media_url} className="h-full w-full object-contain" alt={current.file_name} />
                         )}
                       </button>
                     ) : (
@@ -406,9 +400,7 @@ export default function ApartmentsPage() {
                       <>
                         <button
                           type="button"
-                          onClick={() =>
-                            previousSlide(property.id, gallery.length)
-                          }
+                          onClick={() => previousSlide(property.id, gallery.length)}
                           className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full bg-white/90 px-3 py-1 text-2xl font-black"
                         >
                           ‹
@@ -461,8 +453,7 @@ export default function ApartmentsPage() {
                     <p className="text-xl font-black">
                       GH₵{property.monthly_rent}
                       <span className="text-sm font-medium text-neutral-500">
-                        {" "}
-                        / month
+                        {" "} / month
                       </span>
                     </p>
 
