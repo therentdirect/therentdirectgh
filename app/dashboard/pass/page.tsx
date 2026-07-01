@@ -40,8 +40,8 @@ export default function InspectionPassPage() {
     } = await supabase.auth.getUser();
 
     if (!user) {
-      setLoading(false);
       setMessage("Please login to buy an Inspection Pass.");
+      setLoading(false);
       return;
     }
 
@@ -63,8 +63,7 @@ export default function InspectionPassPage() {
       .limit(1)
       .maybeSingle();
 
-    if (passData) setPass(passData);
-
+    setPass(passData || null);
     setLoading(false);
   }
 
@@ -111,14 +110,21 @@ export default function InspectionPassPage() {
   }
 
   const isPaidNotStarted = pass?.status === "paid_not_started";
-
   const isActive =
     pass?.status === "active" &&
     pass?.expires_at &&
     new Date(pass.expires_at) > new Date();
 
-  const isPending = pass?.status === "pending_verification";
-  const isRejected = pass?.status === "rejected";
+  const isPending =
+    pass?.status === "pending_verification" ||
+    pass?.status === "pending";
+
+  const isFailed =
+    pass?.status === "rejected" ||
+    pass?.status === "failed" ||
+    pass?.status === "cancelled" ||
+    pass?.hubtel_payment_status === "failed" ||
+    pass?.hubtel_payment_status === "cancelled";
 
   const daysRemaining = pass?.expires_at
     ? Math.max(
@@ -139,55 +145,55 @@ export default function InspectionPassPage() {
   }
 
   return (
-    <main className="space-y-5">
-      <section className="rounded-[28px] bg-black p-6 text-white shadow-lg">
-        <p className="text-xs font-black uppercase tracking-[0.3em] text-yellow-400">
+    <main className="space-y-6">
+      <section className="overflow-hidden rounded-[32px] bg-black p-6 text-white shadow-xl">
+        <p className="text-xs font-black uppercase tracking-[0.35em] text-yellow-400">
           RentDirect
         </p>
 
-        <div className="mt-3 flex flex-wrap items-end justify-between gap-4">
+        <div className="mt-4 flex flex-wrap items-end justify-between gap-5">
           <div>
-            <h1 className="text-3xl font-black">30-Day Inspection Pass</h1>
-            <p className="mt-2 max-w-2xl text-sm text-neutral-300">
-              Pay once, unlock landlord contacts instantly, and start your
-              30-day access when you schedule your first inspection.
+            <h1 className="text-3xl font-black md:text-4xl">
+              30-Day Inspection Pass
+            </h1>
+            <p className="mt-3 max-w-2xl text-sm font-medium text-neutral-300">
+              Pay once, unlock landlord contacts, and schedule inspections
+              directly without agent fees.
             </p>
           </div>
 
-          <div className="rounded-2xl bg-white/10 px-5 py-4 text-right">
-            <p className="text-xs text-neutral-300">Pass Fee</p>
-            <h2 className="text-3xl font-black text-yellow-400">GH₵250</h2>
+          <div className="rounded-[24px] bg-white/10 px-6 py-5 text-right">
+            <p className="text-xs font-bold text-neutral-300">Pass Fee</p>
+            <h2 className="text-4xl font-black text-yellow-400">GH₵250</h2>
           </div>
         </div>
       </section>
 
       {message && (
-        <div className="rounded-2xl bg-yellow-100 p-3 text-center text-sm font-black text-yellow-700">
+        <div className="rounded-2xl bg-yellow-100 p-4 text-center text-sm font-black text-yellow-700">
           {message}
         </div>
       )}
 
       {isActive ? (
-        <section className="rounded-[28px] bg-white p-5 shadow-sm">
-          <div className="flex flex-wrap items-center justify-between gap-4 border-b border-neutral-100 pb-4">
-            <div>
-              <p className="text-xs font-black uppercase tracking-[0.25em] text-neutral-400">
-                Current Pass
-              </p>
-              <h2 className="mt-1 text-2xl font-black">Inspection Pass Active</h2>
-            </div>
-
-            <span className="rounded-full bg-green-100 px-4 py-2 text-sm font-black text-green-700">
-              Active
-            </span>
-          </div>
-
-          <div className="mt-5 grid gap-4 md:grid-cols-3">
-            <Info label="Amount" value="GH₵250" />
+        <PassCard
+          title="Inspection Pass Active"
+          badge="Active"
+          badgeStyle="bg-green-100 text-green-700"
+        >
+          <div className="grid gap-4 md:grid-cols-3">
             <Info label="Days Remaining" value={daysRemaining} />
             <Info
               label="Expires On"
               value={new Date(pass!.expires_at!).toLocaleDateString()}
+            />
+            <Info
+              label="Paid On"
+              value={
+                pass?.paid_at
+                  ? new Date(pass.paid_at).toLocaleDateString()
+                  : "Not added"
+              }
             />
           </div>
 
@@ -197,23 +203,14 @@ export default function InspectionPassPage() {
           >
             Browse Apartments
           </Link>
-        </section>
+        </PassCard>
       ) : isPaidNotStarted ? (
-        <section className="rounded-[28px] bg-white p-5 shadow-sm">
-          <div className="flex flex-wrap items-center justify-between gap-4 border-b border-neutral-100 pb-4">
-            <div>
-              <p className="text-xs font-black uppercase tracking-[0.25em] text-neutral-400">
-                Current Pass
-              </p>
-              <h2 className="mt-1 text-2xl font-black">Payment Successful</h2>
-            </div>
-
-            <span className="rounded-full bg-green-100 px-4 py-2 text-sm font-black text-green-700">
-              Contacts Unlocked
-            </span>
-          </div>
-
-          <div className="mt-5 grid gap-4 md:grid-cols-3">
+        <PassCard
+          title="Payment Successful"
+          badge="Contacts Unlocked"
+          badgeStyle="bg-green-100 text-green-700"
+        >
+          <div className="grid gap-4 md:grid-cols-3">
             <Info label="Amount" value="GH₵250" />
             <Info label="Pass Status" value="Paid, not started" />
             <Info
@@ -224,32 +221,23 @@ export default function InspectionPassPage() {
 
           <div className="mt-5 rounded-2xl bg-green-50 p-4 text-sm font-bold text-green-700">
             Your landlord contacts are now unlocked. Your 30-day countdown will
-            start only after you schedule your first inspection.
+            start after your first scheduled inspection.
           </div>
 
           <Link
             href="/dashboard/apartments"
             className="mt-5 inline-block rounded-full bg-yellow-400 px-6 py-3 font-black text-black hover:bg-yellow-300"
           >
-            Browse Apartments
+            Schedule Inspection
           </Link>
-        </section>
+        </PassCard>
       ) : isPending ? (
-        <section className="rounded-[28px] bg-white p-5 shadow-sm">
-          <div className="flex flex-wrap items-center justify-between gap-4 border-b border-neutral-100 pb-4">
-            <div>
-              <p className="text-xs font-black uppercase tracking-[0.25em] text-neutral-400">
-                Current Pass
-              </p>
-              <h2 className="mt-1 text-2xl font-black">Payment Processing</h2>
-            </div>
-
-            <span className="rounded-full bg-yellow-100 px-4 py-2 text-sm font-black text-yellow-700">
-              Pending
-            </span>
-          </div>
-
-          <div className="mt-5 grid gap-4 md:grid-cols-3">
+        <PassCard
+          title="Payment Processing"
+          badge="Pending"
+          badgeStyle="bg-yellow-100 text-yellow-700"
+        >
+          <div className="grid gap-4 md:grid-cols-3">
             <Info label="Payment Method" value={pass?.payment_method} />
             <Info
               label="Reference"
@@ -259,8 +247,7 @@ export default function InspectionPassPage() {
           </div>
 
           <p className="mt-5 text-sm font-bold text-neutral-500">
-            Your payment is being processed by Hubtel. Refresh this page after a
-            few seconds if the status does not update automatically.
+            We are waiting for Hubtel to confirm your payment.
           </p>
 
           <button
@@ -268,33 +255,57 @@ export default function InspectionPassPage() {
             onClick={loadPass}
             className="mt-4 rounded-full bg-black px-6 py-3 font-black text-white hover:bg-neutral-800"
           >
-            Refresh Status
+            Check Payment Status
           </button>
-        </section>
+        </PassCard>
+      ) : isFailed ? (
+        <PassCard
+          title="Payment Failed"
+          badge="Failed"
+          badgeStyle="bg-red-100 text-red-700"
+        >
+          <div className="grid gap-4 md:grid-cols-3">
+            <Info label="Payment Method" value={pass?.payment_method} />
+            <Info
+              label="Reference"
+              value={pass?.hubtel_client_reference || pass?.payment_reference}
+            />
+            <Info label="Amount" value={`GH₵${pass?.amount || 250}`} />
+          </div>
+
+          <div className="mt-5 rounded-2xl bg-red-50 p-4 text-sm font-bold text-red-700">
+            Unfortunately, your payment was unsuccessful or cancelled. Please
+            schedule inspection again or try payment again.
+          </div>
+
+          <div className="mt-5 flex flex-wrap gap-3">
+            <Link
+              href="/dashboard/apartments"
+              className="rounded-full bg-yellow-400 px-6 py-3 font-black text-black hover:bg-yellow-300"
+            >
+              Return to Schedule Inspection
+            </Link>
+
+            <button
+              type="button"
+              onClick={startHubtelPayment}
+              disabled={paying}
+              className="rounded-full bg-black px-6 py-3 font-black text-white hover:bg-neutral-800 disabled:opacity-60"
+            >
+              {paying ? "Opening Hubtel..." : "Pay Again"}
+            </button>
+          </div>
+        </PassCard>
       ) : (
         <section className="grid gap-6 lg:grid-cols-2">
           <div className="rounded-[28px] bg-white p-6 shadow-sm">
             <h2 className="text-2xl font-black">What Your Pass Gives You</h2>
 
-            <p className="mt-2 text-sm text-neutral-500">
-              Get direct access to landlords without agent commissions.
-            </p>
-
             <div className="mt-5 grid gap-3">
-              <Benefit text="Unlock landlord phone numbers instantly after payment" />
+              <Benefit text="Unlock landlord phone numbers after payment" />
               <Benefit text="Schedule inspections directly with landlords" />
               <Benefit text="Your 30-day access starts from your first inspection" />
               <Benefit text="No agent commissions or scouting stress" />
-            </div>
-
-            <div className="mt-6 rounded-[24px] bg-neutral-50 p-5">
-              <p className="text-sm font-bold text-neutral-500">
-                Secure payment powered by Hubtel
-              </p>
-              <p className="mt-2 text-sm text-neutral-600">
-                Pay with Mobile Money, bank card, Hubtel wallet, or other
-                supported payment methods.
-              </p>
             </div>
           </div>
 
@@ -302,8 +313,7 @@ export default function InspectionPassPage() {
             <h2 className="text-2xl font-black">Buy Inspection Pass</h2>
 
             <p className="mt-2 text-sm text-neutral-500">
-              Pay GH₵250 securely. Landlord contacts unlock instantly after
-              successful payment.
+              Pay GH₵250 securely with Hubtel.
             </p>
 
             <div className="mt-5 rounded-[24px] border border-neutral-200 p-5">
@@ -311,16 +321,7 @@ export default function InspectionPassPage() {
               <h3 className="mt-2 text-4xl font-black text-yellow-600">
                 GH₵250
               </h3>
-              <p className="mt-2 text-sm text-neutral-500">
-                Valid for 30 days starting from your first scheduled inspection.
-              </p>
             </div>
-
-            {isRejected && (
-              <div className="mt-5 rounded-2xl bg-red-50 p-4 text-sm font-bold text-red-700">
-                Your previous payment was not successful. Please try again.
-              </div>
-            )}
 
             <button
               type="button"
@@ -330,14 +331,41 @@ export default function InspectionPassPage() {
             >
               {paying ? "Opening Hubtel Checkout..." : "Pay GH₵250 with Hubtel"}
             </button>
-
-            <p className="mt-4 text-center text-xs font-bold text-neutral-400">
-              You will be redirected to Hubtel to complete payment securely.
-            </p>
           </div>
         </section>
       )}
     </main>
+  );
+}
+
+function PassCard({
+  title,
+  badge,
+  badgeStyle,
+  children,
+}: {
+  title: string;
+  badge: string;
+  badgeStyle: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="rounded-[28px] bg-white p-5 shadow-sm">
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-neutral-100 pb-4">
+        <div>
+          <p className="text-xs font-black uppercase tracking-[0.25em] text-neutral-400">
+            Current Pass
+          </p>
+          <h2 className="mt-1 text-2xl font-black">{title}</h2>
+        </div>
+
+        <span className={`rounded-full px-4 py-2 text-sm font-black ${badgeStyle}`}>
+          {badge}
+        </span>
+      </div>
+
+      <div className="mt-5">{children}</div>
+    </section>
   );
 }
 

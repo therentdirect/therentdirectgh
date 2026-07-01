@@ -23,8 +23,10 @@ export default function SignUpPage() {
     setLoading(true);
     setMessage("");
 
+    const cleanEmail = email.trim().toLowerCase();
+
     const { data, error } = await supabase.auth.signUp({
-      email: email.trim().toLowerCase(),
+      email: cleanEmail,
       password,
       options: {
         data: {
@@ -42,13 +44,19 @@ export default function SignUpPage() {
       return;
     }
 
+    if (!data.user) {
+      setMessage("Signup failed. Please try again.");
+      setLoading(false);
+      return;
+    }
+
     const { error: profileError } = await supabase.from("profiles").upsert(
       {
-        id: data.user!.id,
+        id: data.user.id,
         first_name: firstName.trim(),
         last_name: lastName.trim(),
         username: username.trim(),
-        email: email.trim().toLowerCase(),
+        email: cleanEmail,
         phone: phone.trim(),
         role: "user",
       },
