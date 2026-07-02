@@ -19,6 +19,12 @@ export default function ActivityFeed() {
 
   useEffect(() => {
     loadActivities();
+
+    const interval = setInterval(() => {
+      loadActivities();
+    }, 30000);
+
+    return () => clearInterval(interval);
   }, []);
 
   async function loadActivities() {
