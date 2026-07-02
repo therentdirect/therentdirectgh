@@ -255,6 +255,24 @@ Rent: GH₵${property.monthly_rent}/month`
       return;
     }
 
+    if (latestPass.status === "paid_not_started") {
+      const activatedAt = new Date();
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + 30);
+
+      await supabase
+        .from("user_passes")
+        .update({
+          status: "active",
+          approved_at: activatedAt.toISOString(),
+          expires_at: expiresAt.toISOString(),
+        })
+        .eq("id", latestPass.id);
+
+      setHasActivePass(true);
+      setPassExpiresAt(expiresAt.toISOString());
+    }
+
     setInspectionScheduled(true);
     setBooking(false);
     setMessage("✅ Inspection scheduled. Opening landlord WhatsApp...");
@@ -500,7 +518,7 @@ Rent: GH₵${property.monthly_rent}/month`
                 GH₵250
               </h3>
               <p className="mt-2 text-sm text-neutral-400">
-                Valid for 30 days after admin approval.
+                Your 30-day Inspection Pass begins automatically after you schedule your first inspection with a landlord.
               </p>
             </div>
 
