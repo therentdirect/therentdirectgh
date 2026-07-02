@@ -195,7 +195,7 @@ export default function AdminDashboard() {
     const { data: approvedPasses } = await supabase
       .from("user_passes")
       .select("amount")
-      .eq("status", "active");
+      .in("status", ["paid_not_started", "active", "expired"]);
 
     const totalRevenue =
       approvedPasses?.reduce(
