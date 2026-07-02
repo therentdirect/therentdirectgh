@@ -70,6 +70,12 @@ export default function AdminDashboard() {
   const [monthFailedPayments, setMonthFailedPayments] = useState(0);
   const [monthReviews, setMonthReviews] = useState(0);
 
+  const [popularArea, setPopularArea] = useState("Not enough data");
+  const [popularType, setPopularType] = useState("Not enough data");
+  const [averageRent, setAverageRent] = useState(0);
+  const [pendingPayments, setPendingPayments] = useState(0);
+  const [failedPayments, setFailedPayments] = useState(0);
+
   useEffect(() => {
     async function protectAdminPage() {
       const { data } = await supabase.auth.getUser();
@@ -298,6 +304,51 @@ export default function AdminDashboard() {
       .select("*", { count: "exact", head: true })
       .gte("created_at", monthIso);
 
+    const { data: propertyInsights } = await supabase
+      .from("properties")
+      .select("area, apartment_type, monthly_rent, status");
+
+    const areaCounts: Record<string, number> = {};
+    const typeCounts: Record<string, number> = {};
+    let rentTotal = 0;
+    let rentCount = 0;
+
+    propertyInsights?.forEach((property: any) => {
+      if (property.area) {
+        areaCounts[property.area] = (areaCounts[property.area] || 0) + 1;
+      }
+
+      if (property.apartment_type) {
+        typeCounts[property.apartment_type] =
+          (typeCounts[property.apartment_type] || 0) + 1;
+      }
+
+      if (property.monthly_rent) {
+        rentTotal += Number(property.monthly_rent);
+        rentCount += 1;
+      }
+    });
+
+    const mostPopularArea =
+      Object.entries(areaCounts).sort((a, b) => b[1] - a[1])[0]?.[0] ||
+      "Not enough data";
+
+    const mostPopularType =
+      Object.entries(typeCounts).sort((a, b) => b[1] - a[1])[0]?.[0] ||
+      "Not enough data";
+
+    const avgRent = rentCount ? Math.round(rentTotal / rentCount) : 0;
+
+    const { count: pendingPaymentCount } = await supabase
+      .from("user_passes")
+      .select("*", { count: "exact", head: true })
+      .in("status", ["pending", "pending_verification"]);
+
+    const { count: failedPaymentCount } = await supabase
+      .from("user_passes")
+      .select("*", { count: "exact", head: true })
+      .eq("status", "failed");
+
     const totalRevenue =
       approvedPasses?.reduce(
         (sum, item) => sum + Number(item.amount || 0),
@@ -329,6 +380,12 @@ export default function AdminDashboard() {
     setMonthSuccessfulPayments(successfulPaymentsThisMonth || 0);
     setMonthFailedPayments(failedPaymentsThisMonth || 0);
     setMonthReviews(reviewsThisMonth || 0);
+
+    setPopularArea(mostPopularArea);
+    setPopularType(mostPopularType);
+    setAverageRent(avgRent);
+    setPendingPayments(pendingPaymentCount || 0);
+    setFailedPayments(failedPaymentCount || 0);
 
     setLoading(false);
   }
@@ -490,6 +547,29 @@ export default function AdminDashboard() {
         </div>
       </section>
 
+      <section className="rounded-[30px] bg-white p-8 shadow-sm">
+        <p className="text-sm font-black uppercase tracking-[0.3em] text-yellow-600">
+          Platform Insights
+        </p>
+
+        <h2 className="mt-2 text-3xl font-black">
+          Property & Payment Intelligence
+        </h2>
+
+        <p className="mt-2 text-sm text-neutral-500">
+          Understand what users are seeing and how the platform is performing.
+        </p>
+
+        <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-6">
+          <InsightCard title="Most Popular Area" value={popularArea} note="Based on listed properties" />
+          <InsightCard title="Popular Apartment Type" value={popularType} note="Most common listing type" />
+          <InsightCard title="Average Rent" value={`GH₵${averageRent}`} note="Across all listed homes" />
+          <InsightCard title="Available Homes" value={available} note="Ready for inspection" />
+          <InsightCard title="Pending Payments" value={pendingPayments} note="Waiting for Hubtel" />
+          <InsightCard title="Failed Payments" value={failedPayments} note="Failed or cancelled" />
+        </div>
+      </section>
+
       <section className="grid gap-5 md:grid-cols-2 xl:grid-cols-5">
         {stats.map((card) => (
           <Link
@@ -630,6 +710,24 @@ export default function AdminDashboard() {
         </div>
       )}
     </main>
+  );
+}
+
+function InsightCard({
+  title,
+  value,
+  note,
+}: {
+  title: string;
+  value: any;
+  note: string;
+}) {
+  return (
+    <div className="rounded-[22px] bg-neutral-50 p-5">
+      <p className="text-sm font-bold text-neutral-500">{title}</p>
+      <h3 className="mt-3 break-words text-2xl font-black">{value}</h3>
+      <p className="mt-2 text-xs font-bold text-neutral-400">{note}</p>
+    </div>
   );
 }
 
