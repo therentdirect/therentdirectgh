@@ -63,6 +63,13 @@ export default function AdminDashboard() {
   const [todayFailedPayments, setTodayFailedPayments] = useState(0);
   const [todayReviews, setTodayReviews] = useState(0);
 
+  const [monthRevenue, setMonthRevenue] = useState(0);
+  const [monthUsers, setMonthUsers] = useState(0);
+  const [monthInspections, setMonthInspections] = useState(0);
+  const [monthSuccessfulPayments, setMonthSuccessfulPayments] = useState(0);
+  const [monthFailedPayments, setMonthFailedPayments] = useState(0);
+  const [monthReviews, setMonthReviews] = useState(0);
+
   useEffect(() => {
     async function protectAdminPage() {
       const { data } = await supabase.auth.getUser();
@@ -247,6 +254,50 @@ export default function AdminDashboard() {
       .select("*", { count: "exact", head: true })
       .gte("created_at", todayIso);
 
+    const monthStart = new Date();
+    monthStart.setDate(1);
+    monthStart.setHours(0, 0, 0, 0);
+    const monthIso = monthStart.toISOString();
+
+    const { data: monthPaidPasses } = await supabase
+      .from("user_passes")
+      .select("amount")
+      .in("status", ["paid_not_started", "active", "expired"])
+      .gte("created_at", monthIso);
+
+    const monthRevenueTotal =
+      monthPaidPasses?.reduce(
+        (sum, item) => sum + Number(item.amount || 0),
+        0
+      ) || 0;
+
+    const { count: newUsersThisMonth } = await supabase
+      .from("profiles")
+      .select("*", { count: "exact", head: true })
+      .gte("created_at", monthIso);
+
+    const { count: inspectionsThisMonth } = await supabase
+      .from("inspections")
+      .select("*", { count: "exact", head: true })
+      .gte("created_at", monthIso);
+
+    const { count: successfulPaymentsThisMonth } = await supabase
+      .from("user_passes")
+      .select("*", { count: "exact", head: true })
+      .in("status", ["paid_not_started", "active", "expired"])
+      .gte("created_at", monthIso);
+
+    const { count: failedPaymentsThisMonth } = await supabase
+      .from("user_passes")
+      .select("*", { count: "exact", head: true })
+      .eq("status", "failed")
+      .gte("created_at", monthIso);
+
+    const { count: reviewsThisMonth } = await supabase
+      .from("reviews")
+      .select("*", { count: "exact", head: true })
+      .gte("created_at", monthIso);
+
     const totalRevenue =
       approvedPasses?.reduce(
         (sum, item) => sum + Number(item.amount || 0),
@@ -271,6 +322,13 @@ export default function AdminDashboard() {
     setTodaySuccessfulPayments(successfulPaymentsToday || 0);
     setTodayFailedPayments(failedPaymentsToday || 0);
     setTodayReviews(reviewsToday || 0);
+
+    setMonthRevenue(monthRevenueTotal);
+    setMonthUsers(newUsersThisMonth || 0);
+    setMonthInspections(inspectionsThisMonth || 0);
+    setMonthSuccessfulPayments(successfulPaymentsThisMonth || 0);
+    setMonthFailedPayments(failedPaymentsThisMonth || 0);
+    setMonthReviews(reviewsThisMonth || 0);
 
     setLoading(false);
   }
@@ -406,6 +464,29 @@ export default function AdminDashboard() {
           <TodayCard title="Successful Payments" value={todaySuccessfulPayments} note="Completed today" />
           <TodayCard title="Failed Payments" value={todayFailedPayments} note="Failed/cancelled today" />
           <TodayCard title="Reviews" value={todayReviews} note="Submitted today" />
+        </div>
+      </section>
+
+      <section className="rounded-[30px] bg-black p-8 text-white shadow-sm">
+        <p className="text-sm font-black uppercase tracking-[0.3em] text-yellow-400">
+          This Month
+        </p>
+
+        <h2 className="mt-2 text-3xl font-black">
+          Monthly Performance
+        </h2>
+
+        <p className="mt-2 text-sm text-neutral-400">
+          Summary of RentDirect activity since the beginning of this month.
+        </p>
+
+        <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-6">
+          <MonthCard title="Revenue This Month" value={`GH₵${monthRevenue}`} note="Successful pass sales" />
+          <MonthCard title="New Users" value={monthUsers} note="Registered this month" />
+          <MonthCard title="Inspections" value={monthInspections} note="Booked this month" />
+          <MonthCard title="Successful Payments" value={monthSuccessfulPayments} note="Completed this month" />
+          <MonthCard title="Failed Payments" value={monthFailedPayments} note="Failed/cancelled this month" />
+          <MonthCard title="Reviews" value={monthReviews} note="Submitted this month" />
         </div>
       </section>
 
@@ -549,6 +630,24 @@ export default function AdminDashboard() {
         </div>
       )}
     </main>
+  );
+}
+
+function MonthCard({
+  title,
+  value,
+  note,
+}: {
+  title: string;
+  value: any;
+  note: string;
+}) {
+  return (
+    <div className="rounded-[22px] bg-white/10 p-5">
+      <p className="text-sm font-bold text-neutral-300">{title}</p>
+      <h3 className="mt-3 text-3xl font-black text-yellow-400">{value}</h3>
+      <p className="mt-2 text-xs font-bold text-neutral-400">{note}</p>
+    </div>
   );
 }
 
