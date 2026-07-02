@@ -7,16 +7,20 @@ const supabaseAdmin = createClient(
 );
 
 async function sendTelegram(message: string) {
-  const botToken = process.env.TELEGRAM_BOT_TOKEN;
-  const chatId = process.env.TELEGRAM_CHAT_ID;
+  try {
+    const botToken = process.env.TELEGRAM_BOT_TOKEN;
+    const chatId = process.env.TELEGRAM_CHAT_ID;
 
-  if (!botToken || !chatId) return;
+    if (!botToken || !chatId) return;
 
-  await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ chat_id: chatId, text: message }),
-  });
+    await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ chat_id: chatId, text: message }),
+    });
+  } catch {
+    // Do not fail payment because Telegram failed
+  }
 }
 
 export async function POST(request: Request) {
@@ -50,7 +54,10 @@ export async function POST(request: Request) {
     const normalizedStatus = String(status).toLowerCase();
 
     if (!clientReference) {
-      return NextResponse.json({ error: "Missing client reference" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Missing client reference" },
+        { status: 400 }
+      );
     }
 
     const isSuccessful =
@@ -65,6 +72,16 @@ export async function POST(request: Request) {
       normalizedStatus === "processing" ||
       normalizedStatus === "ongoing";
 
+    const isFailed =
+      normalizedStatus === "failed" ||
+      normalizedStatus === "fail" ||
+      normalizedStatus === "cancelled" ||
+      normalizedStatus === "canceled" ||
+      normalizedStatus === "declined" ||
+      normalizedStatus === "expired" ||
+      normalizedStatus === "insufficient funds" ||
+      normalizedStatus.includes("insufficient");
+
     if (isPending) {
       await supabaseAdmin
         .from("user_passes")
@@ -76,16 +93,16 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: true, status: "pending" });
     }
 
-    if (!isSuccessful) {
+    if (!isSuccessful || isFailed) {
       await supabaseAdmin
         .from("user_passes")
         .update({
-          status: "pending_verification",
-          hubtel_payment_status: status || "unknown",
+          status: "failed",
+          hubtel_payment_status: status || "failed",
         })
         .eq("hubtel_client_reference", clientReference);
 
-      return NextResponse.json({ success: true, status: "not_successful_yet" });
+      return NextResponse.json({ success: true, status: "failed" });
     }
 
     const paidAt = new Date().toISOString();
@@ -112,12 +129,15 @@ export async function POST(request: Request) {
         passData?.username || passData?.user_email || "Unknown user"
       }\nEmail: ${passData?.user_email || "Not added"}\nPhone: ${
         passData?.user_phone || data?.CustomerPhoneNumber || "Not added"
-      }\nAmount: GH₵${data?.Amount || data?.amount || 250}\nReference: ${clientReference}\n\nPass Status: Paid, not started`
+      }\nAmount: GH₵${
+        data?.Amount || data?.amount || 250
+      }\nReference: ${clientReference}\n\nPass Status: Paid, not started`
     );
 
     return NextResponse.json({ success: true, status: "paid_not_started" });
   } catch (error: any) {
     console.error("Hubtel callback error:", error);
+
     return NextResponse.json(
       { error: error.message || "Hubtel callback failed" },
       { status: 500 }
