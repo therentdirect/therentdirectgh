@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 
@@ -26,6 +27,12 @@ export default function InspectionPassPage() {
   const [loading, setLoading] = useState(true);
   const [paying, setPaying] = useState(false);
   const [message, setMessage] = useState("");
+
+  const searchParams = useSearchParams();
+  const propertyId = searchParams.get("property") || "";
+  const returnTo = propertyId
+    ? `/dashboard/apartments/${propertyId}`
+    : "/dashboard/apartments";
 
   useEffect(() => {
     loadPass();
@@ -93,6 +100,7 @@ export default function InspectionPassPage() {
           username: profile?.username || "",
           phone: profile?.phone || "",
           name: fullName || profile?.username || "RentDirect User",
+          property_id: propertyId,
         }),
       });
 
@@ -198,7 +206,7 @@ export default function InspectionPassPage() {
           </div>
 
           <Link
-            href="/dashboard/apartments"
+            href={returnTo}
             className="mt-5 inline-block rounded-full bg-yellow-400 px-6 py-3 font-black text-black hover:bg-yellow-300"
           >
             Browse Apartments
@@ -225,7 +233,7 @@ export default function InspectionPassPage() {
           </div>
 
           <Link
-            href="/dashboard/apartments"
+            href={returnTo}
             className="mt-5 inline-block rounded-full bg-yellow-400 px-6 py-3 font-black text-black hover:bg-yellow-300"
           >
             Schedule Inspection
@@ -280,7 +288,7 @@ export default function InspectionPassPage() {
 
           <div className="mt-5 flex flex-wrap gap-3">
             <Link
-              href="/dashboard/apartments"
+              href={returnTo}
               className="rounded-full bg-yellow-400 px-6 py-3 font-black text-black hover:bg-yellow-300"
             >
               Return to Schedule Inspection

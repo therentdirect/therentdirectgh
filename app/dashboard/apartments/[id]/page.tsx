@@ -505,7 +505,7 @@ Rent: GH₵${property.monthly_rent}/month`
             </div>
 
             <Link
-              href="/dashboard/pass"
+              href={`/dashboard/pass?property=${property.id}`}
               className="mt-5 block rounded-full bg-yellow-400 px-5 py-3 text-center font-black text-black hover:bg-yellow-300"
             >
               Schedule Inspection

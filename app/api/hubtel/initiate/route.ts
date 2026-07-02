@@ -15,6 +15,11 @@ export async function POST(request: Request) {
     const merchantAccountNumber = process.env.HUBTEL_MERCHANT_ACCOUNT_NUMBER;
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 
+    const propertyId = body.property_id || "";
+    const returnTo = propertyId
+      ? `/dashboard/apartments/${propertyId}`
+      : "/dashboard/apartments";
+
     if (!apiId || !apiKey || !merchantAccountNumber) {
       return NextResponse.json(
         { error: "Hubtel settings are missing." },
@@ -35,6 +40,7 @@ export async function POST(request: Request) {
       payment_reference: clientReference,
       hubtel_client_reference: clientReference,
       status: "pending_verification",
+      hubtel_payment_status: "pending",
     });
 
     if (passError) {
@@ -53,8 +59,8 @@ export async function POST(request: Request) {
         totalAmount: 250.0,
         description: "RentDirect 30-Day Inspection Pass",
         callbackUrl: `${siteUrl}/api/hubtel/callback`,
-        returnUrl: `${siteUrl}/dashboard/pass/success?reference=${clientReference}`,
-        cancellationUrl: `${siteUrl}/dashboard/pass/cancelled?reference=${clientReference}`,
+        returnUrl: `${siteUrl}/dashboard/pass/success?reference=${clientReference}&returnTo=${encodeURIComponent(returnTo)}`,
+        cancellationUrl: `${siteUrl}/dashboard/pass/cancelled?reference=${clientReference}&returnTo=${encodeURIComponent(returnTo)}`,
         merchantAccountNumber,
         clientReference,
         payeeName: body.name || "RentDirect User",
@@ -66,6 +72,14 @@ export async function POST(request: Request) {
     const data = await response.json();
 
     if (!response.ok || data?.responseCode !== "0000") {
+      await supabaseAdmin
+        .from("user_passes")
+        .update({
+          status: "failed",
+          hubtel_payment_status: "failed",
+        })
+        .eq("hubtel_client_reference", clientReference);
+
       return NextResponse.json(
         { error: data?.message || "Hubtel checkout failed.", details: data },
         { status: 400 }
@@ -84,6 +98,7 @@ export async function POST(request: Request) {
       checkoutUrl: data.data.checkoutUrl,
       checkoutId: data.data.checkoutId,
       clientReference,
+      returnTo,
     });
   } catch (error: any) {
     return NextResponse.json(
