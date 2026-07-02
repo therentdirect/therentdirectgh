@@ -266,13 +266,31 @@ function InspectionPassContent() {
             We are waiting for Hubtel to confirm your payment.
           </p>
 
-          <button
-            type="button"
-            onClick={loadPass}
-            className="mt-4 rounded-full bg-black px-6 py-3 font-black text-white hover:bg-neutral-800"
-          >
-            Check Payment Status
-          </button>
+          <div className="mt-5 flex flex-wrap gap-3">
+            <button
+              type="button"
+              onClick={loadPass}
+              className="rounded-full bg-black px-6 py-3 font-black text-white hover:bg-neutral-800"
+            >
+              Check Payment Status
+            </button>
+
+            <Link
+              href={returnTo}
+              className="rounded-full bg-yellow-400 px-6 py-3 font-black text-black hover:bg-yellow-300"
+            >
+              Return to Schedule Inspection
+            </Link>
+
+            <button
+              type="button"
+              onClick={startHubtelPayment}
+              disabled={paying}
+              className="rounded-full bg-red-50 px-6 py-3 font-black text-red-600 hover:bg-red-100 disabled:opacity-60"
+            >
+              {paying ? "Opening Hubtel..." : "Try Payment Again"}
+            </button>
+          </div>
         </PassCard>
       ) : isFailed ? (
         <PassCard
