@@ -364,28 +364,96 @@ function InspectionPassContent() {
       ) : (
         <section className="grid gap-6 lg:grid-cols-2">
           <div className="rounded-[28px] bg-white p-6 shadow-sm">
-            <h2 className="text-2xl font-black">What Your Pass Gives You</h2>
+            <h2 className="text-2xl font-black">
+              What Your Inspection Pass Includes
+            </h2>
+
+            <p className="mt-2 text-sm font-bold text-neutral-500">
+              One simple pass gives you direct access to landlords without agent
+              commissions or hidden fees.
+            </p>
 
             <div className="mt-5 grid gap-3">
-              <Benefit text="Unlock landlord phone numbers after payment" />
-              <Benefit text="Schedule inspections directly with landlords" />
-              <Benefit text="Your 30-day access starts from your first inspection" />
-              <Benefit text="No agent commissions or scouting stress" />
+              <Benefit text="Unlimited landlord phone numbers for 30 days" />
+              <Benefit text="Direct WhatsApp conversations with landlords" />
+              <Benefit text="Unlimited apartment inspections" />
+              <Benefit text="No agent commissions or hidden charges" />
+              <Benefit text="Verified landlords and listed apartments" />
+              <Benefit text="New apartments added regularly" />
+              <Benefit text="Your 30-day pass starts after your first inspection" />
+            </div>
+
+            <div className="mt-6 rounded-[24px] border border-neutral-200 bg-neutral-50 p-5">
+              <h3 className="text-xl font-black">Why Choose RentDirect?</h3>
+
+              <div className="mt-4 grid gap-3 text-sm font-bold">
+                <div className="grid grid-cols-2 gap-3 rounded-2xl bg-white p-4">
+                  <span className="text-red-600">Agent commission ❌</span>
+                  <span className="text-green-700">One GH₵250 pass ✅</span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 rounded-2xl bg-white p-4">
+                  <span className="text-red-600">Hidden charges ❌</span>
+                  <span className="text-green-700">Transparent pricing ✅</span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 rounded-2xl bg-white p-4">
+                  <span className="text-red-600">Waiting on agents ❌</span>
+                  <span className="text-green-700">Contact landlords directly ✅</span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 rounded-2xl bg-white p-4">
+                  <span className="text-red-600">Limited options ❌</span>
+                  <span className="text-green-700">Inspect multiple apartments ✅</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6 rounded-[24px] bg-black p-5 text-white">
+              <h3 className="text-xl font-black text-yellow-400">
+                Secure Payment
+              </h3>
+
+              <p className="mt-2 text-sm text-neutral-300">
+                Your payment is processed securely through Hubtel. Landlord
+                contacts unlock after successful payment, and your 30-day pass
+                begins after your first scheduled inspection.
+              </p>
             </div>
           </div>
 
           <div className="rounded-[28px] bg-white p-6 shadow-sm">
-            <h2 className="text-2xl font-black">Buy Inspection Pass</h2>
+            <p className="text-xs font-black uppercase tracking-[0.3em] text-yellow-600">
+              RentDirect Access Pass
+            </p>
+
+            <h2 className="mt-3 text-3xl font-black">
+              30-Day Inspection Pass
+            </h2>
 
             <p className="mt-2 text-sm text-neutral-500">
-              Pay GH₵250 securely with Hubtel.
+              Pay once and unlock direct landlord access.
             </p>
 
             <div className="mt-5 rounded-[24px] border border-neutral-200 p-5">
               <p className="text-sm text-neutral-500">Inspection Pass Fee</p>
-              <h3 className="mt-2 text-4xl font-black text-yellow-600">
+              <h3 className="mt-2 text-5xl font-black text-yellow-600">
                 GH₵250
               </h3>
+
+              <div className="mt-5 grid gap-3 text-sm font-black text-neutral-700">
+                <p>✔ Unlimited landlord contacts</p>
+                <p>✔ Unlimited inspections during your pass period</p>
+                <p>✔ Direct WhatsApp access</p>
+                <p>✔ Direct phone calls</p>
+                <p>✔ No agent commissions</p>
+                <p>✔ Valid for 30 days after your first inspection</p>
+              </div>
+            </div>
+
+            <div className="mt-5 rounded-2xl bg-yellow-50 p-4 text-sm font-black text-yellow-800">
+              Many tenants save more than GH₵250 by avoiding just one agent
+              commission.
             </div>
 
             <button
@@ -394,8 +462,12 @@ function InspectionPassContent() {
               disabled={paying}
               className="mt-5 w-full rounded-full bg-yellow-400 p-4 font-black text-black hover:bg-yellow-300 disabled:opacity-60"
             >
-              {paying ? "Opening Hubtel Checkout..." : "Pay GH₵250 with Hubtel"}
+              {paying ? "Opening Hubtel Checkout..." : "Pay GH₵250 Securely with Hubtel"}
             </button>
+
+            <p className="mt-4 text-center text-xs font-bold text-neutral-400">
+              Secure payment powered by Hubtel. No hidden charges.
+            </p>
           </div>
         </section>
       )}
