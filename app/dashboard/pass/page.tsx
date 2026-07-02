@@ -78,7 +78,38 @@ function InspectionPassContent() {
       .limit(1)
       .maybeSingle();
 
-    setPass(passData || null);
+    if (passData) {
+      const passIsPending =
+        passData.status === "pending_verification" ||
+        passData.status === "pending";
+
+      const createdAt = new Date(passData.created_at).getTime();
+      const now = new Date().getTime();
+      const pendingMinutes = (now - createdAt) / (1000 * 60);
+
+      if (passIsPending && pendingMinutes >= 15) {
+        const { data: expiredPass } = await supabase
+          .from("user_passes")
+          .update({
+            status: "failed",
+            hubtel_payment_status: "expired",
+          })
+          .eq("id", passData.id)
+          .select("*")
+          .single();
+
+        setPass(expiredPass || {
+          ...passData,
+          status: "failed",
+          hubtel_payment_status: "expired",
+        });
+      } else {
+        setPass(passData);
+      }
+    } else {
+      setPass(null);
+    }
+
     setLoading(false);
   }
 

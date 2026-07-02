@@ -1,11 +1,34 @@
 "use client";
 
+import { Suspense } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 
 export default function PaymentSuccessPage() {
   return (
+    <Suspense
+      fallback={
+        <main className="mx-auto max-w-3xl py-16 text-center">
+          Loading...
+        </main>
+      }
+    >
+      <SuccessContent />
+    </Suspense>
+  );
+}
+
+function SuccessContent() {
+  const searchParams = useSearchParams();
+
+  const returnTo =
+    decodeURIComponent(searchParams.get("returnTo") || "") ||
+    "/dashboard/apartments";
+
+  return (
     <main className="mx-auto max-w-3xl py-16">
       <section className="rounded-[32px] bg-white p-10 text-center shadow-sm">
+
         <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-green-100 text-5xl">
           ✅
         </div>
@@ -24,20 +47,21 @@ export default function PaymentSuccessPage() {
           </h2>
 
           <p className="mt-3 text-neutral-700">
-            You can now view landlord phone numbers immediately.
+            You can now contact the landlord directly.
           </p>
 
           <p className="mt-3 text-neutral-700">
-            Your 30-day pass will begin only after you schedule your first inspection.
+            Your 30-day pass begins after your first scheduled inspection.
           </p>
         </div>
 
         <Link
-          href="/dashboard/apartments"
+          href={returnTo}
           className="mt-8 inline-block rounded-full bg-yellow-400 px-8 py-4 font-black text-black hover:bg-yellow-300"
         >
-          Browse Apartments
+          Continue to Apartment
         </Link>
+
       </section>
     </main>
   );

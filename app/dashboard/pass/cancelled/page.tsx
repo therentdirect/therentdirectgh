@@ -1,8 +1,30 @@
 "use client";
 
+import { Suspense } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 
 export default function PaymentCancelledPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="mx-auto max-w-3xl py-16 text-center">
+          Loading...
+        </main>
+      }
+    >
+      <CancelledContent />
+    </Suspense>
+  );
+}
+
+function CancelledContent() {
+  const searchParams = useSearchParams();
+
+  const returnTo =
+    decodeURIComponent(searchParams.get("returnTo") || "") ||
+    "/dashboard/apartments";
+
   return (
     <main className="mx-auto max-w-3xl py-16">
       <section className="rounded-[32px] bg-white p-10 text-center shadow-sm">
@@ -16,19 +38,30 @@ export default function PaymentCancelledPage() {
         </h1>
 
         <p className="mt-4 text-neutral-600">
-          Your payment was cancelled.
+          Your payment was cancelled before completion.
         </p>
 
         <p className="mt-2 text-neutral-600">
-          No money has been deducted by RentDirect.
+          No inspection pass has been activated.
         </p>
 
-        <Link
-          href="/dashboard/pass"
-          className="mt-8 inline-block rounded-full bg-yellow-400 px-8 py-4 font-black text-black hover:bg-yellow-300"
-        >
-          Try Again
-        </Link>
+        <div className="mt-8 flex flex-wrap justify-center gap-4">
+
+          <Link
+            href={returnTo}
+            className="rounded-full bg-yellow-400 px-8 py-4 font-black text-black hover:bg-yellow-300"
+          >
+            Return to Apartment
+          </Link>
+
+          <Link
+            href="/dashboard/pass"
+            className="rounded-full bg-black px-8 py-4 font-black text-white hover:bg-neutral-800"
+          >
+            Try Payment Again
+          </Link>
+
+        </div>
 
       </section>
     </main>
