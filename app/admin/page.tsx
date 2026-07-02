@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import ActivityFeed from "./components/ActivityFeed";
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -340,6 +341,8 @@ export default function AdminDashboard() {
           </Link>
         ))}
       </section>
+
+      <ActivityFeed />
 
       <section className="rounded-[30px] bg-white p-8 shadow-sm">
         <h2 className="text-2xl font-black">Change Password</h2>
