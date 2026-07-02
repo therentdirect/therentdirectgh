@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
@@ -21,6 +21,14 @@ type UserPass = {
 };
 
 export default function InspectionPassPage() {
+  return (
+    <Suspense fallback={<main className="rounded-[28px] bg-white p-10 text-center text-neutral-500">Loading Inspection Pass...</main>}>
+      <InspectionPassContent />
+    </Suspense>
+  );
+}
+
+function InspectionPassContent() {
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
   const [pass, setPass] = useState<UserPass | null>(null);
