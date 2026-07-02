@@ -56,6 +56,13 @@ export default function AdminDashboard() {
   const [pendingReviews, setPendingReviews] = useState(0);
   const [approvedReviews, setApprovedReviews] = useState(0);
 
+  const [todayRevenue, setTodayRevenue] = useState(0);
+  const [todayUsers, setTodayUsers] = useState(0);
+  const [todayInspections, setTodayInspections] = useState(0);
+  const [todaySuccessfulPayments, setTodaySuccessfulPayments] = useState(0);
+  const [todayFailedPayments, setTodayFailedPayments] = useState(0);
+  const [todayReviews, setTodayReviews] = useState(0);
+
   useEffect(() => {
     async function protectAdminPage() {
       const { data } = await supabase.auth.getUser();
@@ -197,6 +204,49 @@ export default function AdminDashboard() {
       .select("amount")
       .in("status", ["paid_not_started", "active", "expired"]);
 
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const todayIso = todayStart.toISOString();
+
+    const { data: todayPaidPasses } = await supabase
+      .from("user_passes")
+      .select("amount")
+      .in("status", ["paid_not_started", "active", "expired"])
+      .gte("created_at", todayIso);
+
+    const todayRevenueTotal =
+      todayPaidPasses?.reduce(
+        (sum, item) => sum + Number(item.amount || 0),
+        0
+      ) || 0;
+
+    const { count: newUsersToday } = await supabase
+      .from("profiles")
+      .select("*", { count: "exact", head: true })
+      .gte("created_at", todayIso);
+
+    const { count: inspectionsToday } = await supabase
+      .from("inspections")
+      .select("*", { count: "exact", head: true })
+      .gte("created_at", todayIso);
+
+    const { count: successfulPaymentsToday } = await supabase
+      .from("user_passes")
+      .select("*", { count: "exact", head: true })
+      .in("status", ["paid_not_started", "active", "expired"])
+      .gte("created_at", todayIso);
+
+    const { count: failedPaymentsToday } = await supabase
+      .from("user_passes")
+      .select("*", { count: "exact", head: true })
+      .eq("status", "failed")
+      .gte("created_at", todayIso);
+
+    const { count: reviewsToday } = await supabase
+      .from("reviews")
+      .select("*", { count: "exact", head: true })
+      .gte("created_at", todayIso);
+
     const totalRevenue =
       approvedPasses?.reduce(
         (sum, item) => sum + Number(item.amount || 0),
@@ -214,6 +264,13 @@ export default function AdminDashboard() {
 
     setPendingReviews(pendingReviewCount);
     setApprovedReviews(approvedReviewCount);
+
+    setTodayRevenue(todayRevenueTotal);
+    setTodayUsers(newUsersToday || 0);
+    setTodayInspections(inspectionsToday || 0);
+    setTodaySuccessfulPayments(successfulPaymentsToday || 0);
+    setTodayFailedPayments(failedPaymentsToday || 0);
+    setTodayReviews(reviewsToday || 0);
 
     setLoading(false);
   }
@@ -319,6 +376,38 @@ export default function AdminDashboard() {
           Loading dashboard...
         </div>
       )}
+
+      <section className="rounded-[30px] bg-white p-8 shadow-sm">
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <p className="text-sm font-black uppercase tracking-[0.3em] text-yellow-600">
+              Today's Performance
+            </p>
+            <h2 className="mt-2 text-3xl font-black">
+              Business Snapshot
+            </h2>
+            <p className="mt-2 text-sm text-neutral-500">
+              Live summary of today's users, payments, inspections and reviews.
+            </p>
+          </div>
+
+          <button
+            onClick={loadStats}
+            className="rounded-full bg-black px-5 py-3 text-sm font-black text-yellow-400 hover:bg-neutral-800"
+          >
+            Refresh Stats
+          </button>
+        </div>
+
+        <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-6">
+          <TodayCard title="Revenue Today" value={`GH₵${todayRevenue}`} note="Successful pass sales" />
+          <TodayCard title="New Users" value={todayUsers} note="Registered today" />
+          <TodayCard title="Inspections" value={todayInspections} note="Booked today" />
+          <TodayCard title="Successful Payments" value={todaySuccessfulPayments} note="Completed today" />
+          <TodayCard title="Failed Payments" value={todayFailedPayments} note="Failed/cancelled today" />
+          <TodayCard title="Reviews" value={todayReviews} note="Submitted today" />
+        </div>
+      </section>
 
       <section className="grid gap-5 md:grid-cols-2 xl:grid-cols-5">
         {stats.map((card) => (
@@ -460,6 +549,24 @@ export default function AdminDashboard() {
         </div>
       )}
     </main>
+  );
+}
+
+function TodayCard({
+  title,
+  value,
+  note,
+}: {
+  title: string;
+  value: any;
+  note: string;
+}) {
+  return (
+    <div className="rounded-[22px] bg-neutral-50 p-5">
+      <p className="text-sm font-bold text-neutral-500">{title}</p>
+      <h3 className="mt-3 text-3xl font-black">{value}</h3>
+      <p className="mt-2 text-xs font-bold text-neutral-400">{note}</p>
+    </div>
   );
 }
 
