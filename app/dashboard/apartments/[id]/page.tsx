@@ -63,9 +63,15 @@ export default function PropertyDetailsPage() {
       data: { user },
     } = await supabase.auth.getUser();
 
-    await supabase.from("property_views").insert({
-      property_id: propertyId,
-      user_id: user?.id ?? null,
+    await fetch("/api/property-views", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        property_id: propertyId,
+        user_id: user?.id ?? null,
+      }),
     });
   };
 
