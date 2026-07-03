@@ -177,6 +177,10 @@ export default function AdminDashboard() {
   async function loadStats() {
     setLoading(true);
 
+    await fetch("/api/passes/expire", {
+      method: "POST",
+    });
+
     const totalUsers = await getCount("profiles");
     const totalProperties = await getCount("properties");
 

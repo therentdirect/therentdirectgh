@@ -48,6 +48,10 @@ function InspectionPassContent() {
 
   async function loadPass() {
     setLoading(true);
+
+    await fetch("/api/passes/expire", {
+      method: "POST",
+    });
     setMessage("");
 
     const {
