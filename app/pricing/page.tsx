@@ -41,13 +41,13 @@ export default function PricingPage() {
 
           <div className="rounded-[32px] bg-white p-8 text-black shadow-2xl">
             <p className="text-sm font-black uppercase tracking-[0.25em] text-yellow-600">
-              30-Day Inspection Pass
+              Direct Landlord Access
             </p>
 
             <h2 className="mt-5 text-6xl font-black">GH₵250</h2>
 
             <p className="mt-4 font-bold text-neutral-600">
-              Unlock landlord contacts and schedule inspections directly.
+              Get direct landlord phone numbers and WhatsApp access after your one-time payment.
             </p>
 
             <div className="mt-6 rounded-2xl bg-yellow-50 p-4 text-sm font-black text-yellow-800">
@@ -58,7 +58,7 @@ export default function PricingPage() {
               href="/dashboard/pass"
               className="mt-8 block rounded-full bg-yellow-400 px-8 py-4 text-center font-black text-black hover:bg-yellow-300"
             >
-              Buy Inspection Pass
+              Unlock Landlord Contact
             </Link>
 
             <p className="mt-4 text-center text-xs font-bold text-neutral-500">
