@@ -255,6 +255,24 @@ Rent: GH₵${property.monthly_rent}/month`
       return;
     }
 
+    await fetch("/api/telegram/inspection", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        user_email: user.email,
+        user_name: profile
+          ? `${profile.first_name || ""} ${profile.last_name || ""}`.trim()
+          : "",
+        user_phone: profile?.phone || "",
+        property_title: property.title,
+        property_location: `${property.area}, ${property.city}, ${property.region}`,
+        landlord_name: property.landlord_name,
+        landlord_phone: property.landlord_phone,
+      }),
+    });
+
     if (latestPass.status === "paid_not_started") {
       const activatedAt = new Date();
       const expiresAt = new Date();
