@@ -69,6 +69,19 @@ export default function SignUpPage() {
       return;
     }
 
+    await fetch("/api/telegram/signup", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        name: `${firstName.trim()} ${lastName.trim()}`,
+        username: username.trim(),
+        phone: phone.trim(),
+        email: cleanEmail,
+      }),
+    });
+
     setMessage("✅ Account created successfully.");
     router.push("/dashboard");
     setLoading(false);
