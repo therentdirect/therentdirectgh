@@ -38,12 +38,22 @@ type Media = {
   display_order: number;
 };
 
+type Inspection = {
+  id: string;
+  user_name: string;
+  user_email: string;
+  user_phone: string;
+  inspection_status: string;
+  created_at: string;
+};
+
 export default function AdminPropertyDetailsPage() {
   const params = useParams();
   const propertyId = params.id as string;
 
   const [property, setProperty] = useState<Property | null>(null);
   const [media, setMedia] = useState<Media[]>([]);
+  const [inspections, setInspections] = useState<Inspection[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -73,6 +83,16 @@ export default function AdminPropertyDetailsPage() {
 
     if (mediaData) {
       setMedia(mediaData);
+    }
+
+    const { data: inspectionData } = await supabase
+      .from("inspections")
+      .select("id,user_name,user_email,user_phone,inspection_status,created_at")
+      .eq("property_id", propertyId)
+      .order("created_at", { ascending: false });
+
+    if (inspectionData) {
+      setInspections(inspectionData);
     }
 
     setLoading(false);
@@ -196,6 +216,13 @@ export default function AdminPropertyDetailsPage() {
         </div>
       </section>
 
+      <section className="grid gap-4 md:grid-cols-4">
+        <PerformanceCard title="Total Inspections" value={inspections.length} />
+        <PerformanceCard title="Images" value={images.length} />
+        <PerformanceCard title="Videos" value={videos.length} />
+        <PerformanceCard title="Status" value={property.status || "Not added"} />
+      </section>
+
       <section className="grid gap-6 lg:grid-cols-3">
         <div className="rounded-3xl bg-white p-6 shadow-sm lg:col-span-2">
           <h2 className="text-2xl font-bold">Property Details</h2>
@@ -233,6 +260,50 @@ export default function AdminPropertyDetailsPage() {
             </a>
           )}
         </div>
+      </section>
+
+      <section className="rounded-3xl bg-white p-6 shadow-sm">
+        <div className="flex items-center justify-between">
+          <h2 className="text-2xl font-bold">Recent Inspections</h2>
+          <Link
+            href="/admin/inspections"
+            className="text-sm font-bold text-yellow-600"
+          >
+            View All
+          </Link>
+        </div>
+
+        {inspections.length === 0 ? (
+          <p className="mt-6 text-slate-500">No inspections booked for this property yet.</p>
+        ) : (
+          <div className="mt-6 space-y-3">
+            {inspections.slice(0, 6).map((inspection) => (
+              <div
+                key={inspection.id}
+                className="rounded-2xl bg-slate-50 p-4"
+              >
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <p className="font-black">
+                      {inspection.user_name || inspection.user_email || "Unknown user"}
+                    </p>
+                    <p className="mt-1 text-sm text-slate-500">
+                      {inspection.user_phone || "No phone"} • {inspection.user_email || "No email"}
+                    </p>
+                  </div>
+
+                  <span className="rounded-full bg-green-100 px-4 py-2 text-xs font-black text-green-700">
+                    {inspection.inspection_status || "confirmed"}
+                  </span>
+                </div>
+
+                <p className="mt-2 text-xs font-bold text-slate-400">
+                  {new Date(inspection.created_at).toLocaleString()}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
       </section>
 
       <section className="rounded-3xl bg-white p-6 shadow-sm">
@@ -289,6 +360,15 @@ export default function AdminPropertyDetailsPage() {
         )}
       </section>
     </main>
+  );
+}
+
+function PerformanceCard({ title, value }: { title: string; value: any }) {
+  return (
+    <div className="rounded-3xl bg-white p-5 shadow-sm">
+      <p className="text-sm font-bold text-slate-500">{title}</p>
+      <h2 className="mt-2 break-words text-3xl font-black">{value}</h2>
+    </div>
   );
 }
 
