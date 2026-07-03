@@ -54,6 +54,8 @@ export default function AdminPropertyDetailsPage() {
   const [property, setProperty] = useState<Property | null>(null);
   const [media, setMedia] = useState<Media[]>([]);
   const [inspections, setInspections] = useState<Inspection[]>([]);
+  const [viewCount, setViewCount] = useState(0);
+  const [favoriteCount, setFavoriteCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -94,6 +96,19 @@ export default function AdminPropertyDetailsPage() {
     if (inspectionData) {
       setInspections(inspectionData);
     }
+
+    const { count: views } = await supabase
+      .from("property_views")
+      .select("*", { count: "exact", head: true })
+      .eq("property_id", propertyId);
+
+    const { count: favorites } = await supabase
+      .from("favorites")
+      .select("*", { count: "exact", head: true })
+      .eq("property_id", propertyId);
+
+    setViewCount(views || 0);
+    setFavoriteCount(favorites || 0);
 
     setLoading(false);
   };
@@ -217,7 +232,13 @@ export default function AdminPropertyDetailsPage() {
       </section>
 
       <section className="grid gap-4 md:grid-cols-4">
-        <PerformanceCard title="Total Inspections" value={inspections.length} />
+        <PerformanceCard title="Total Views" value={viewCount} />
+        <PerformanceCard title="Favorites" value={favoriteCount} />
+        <PerformanceCard title="Inspections" value={inspections.length} />
+        <PerformanceCard
+          title="Conversion Rate"
+          value={viewCount ? `${((inspections.length / viewCount) * 100).toFixed(1)}%` : "0%"}
+        />
         <PerformanceCard title="Images" value={images.length} />
         <PerformanceCard title="Videos" value={videos.length} />
         <PerformanceCard title="Status" value={property.status || "Not added"} />
