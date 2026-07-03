@@ -52,8 +52,22 @@ export default function PropertyDetailsPage() {
   const [inspectionScheduled, setInspectionScheduled] = useState(false);
 
   useEffect(() => {
+    if (!propertyId) return;
+
     loadPageData();
+    trackPropertyView();
   }, [propertyId]);
+
+  const trackPropertyView = async () => {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    await supabase.from("property_views").insert({
+      property_id: propertyId,
+      user_id: user?.id ?? null,
+    });
+  };
 
   const loadPageData = async () => {
     setLoading(true);
