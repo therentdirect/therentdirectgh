@@ -122,6 +122,8 @@ self.addEventListener("push", (event) => {
         url: data.url,
       },
       vibrate: [200, 100, 200],
+      silent: false,
+      requireInteraction: true,
       tag: "rentdirect-notification",
       renotify: true,
     })

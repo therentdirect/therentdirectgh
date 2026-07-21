@@ -131,6 +131,10 @@ export default function PushNotificationButton() {
 
       setEnabled(true);
       setMessage("Notifications enabled successfully.");
+
+      setTimeout(() => {
+        setMessage("");
+      }, 2500);
     } catch (error) {
       console.error("Enable notification error:", error);
 
@@ -181,7 +185,7 @@ export default function PushNotificationButton() {
     }
   }
 
-  if (!supported) return null;
+  if (!supported || enabled) return null;
 
   return (
     <div className="fixed bottom-20 right-5 z-[100]">
