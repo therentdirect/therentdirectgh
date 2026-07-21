@@ -4,9 +4,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 
 function convertVapidKey(base64String: string) {
-  const padding = "=".repeat(
-    (4 - (base64String.length % 4)) % 4
-  );
+  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
 
   const base64 = (base64String + padding)
     .replace(/-/g, "+")
@@ -17,6 +15,19 @@ function convertVapidKey(base64String: string) {
   return Uint8Array.from(
     [...rawData].map((character) => character.charCodeAt(0))
   );
+}
+
+async function getServiceWorkerRegistration() {
+  const existingRegistration =
+    await navigator.serviceWorker.getRegistration();
+
+  if (existingRegistration) {
+    return existingRegistration;
+  }
+
+  return await navigator.serviceWorker.register("/sw.js", {
+    scope: "/",
+  });
 }
 
 export default function PushNotificationButton() {
@@ -36,39 +47,32 @@ export default function PushNotificationButton() {
 
       if (!isSupported) return;
 
-      const registration =
-        await navigator.serviceWorker.ready;
+      try {
+        const registration = await getServiceWorkerRegistration();
+        const subscription =
+          await registration.pushManager.getSubscription();
 
-      const subscription =
-        await registration.pushManager.getSubscription();
-
-      setEnabled(Boolean(subscription));
+        setEnabled(Boolean(subscription));
+      } catch (error) {
+        console.error("Notification status check failed:", error);
+      }
     }
 
-    checkStatus();
+    void checkStatus();
   }, []);
 
   async function enableNotifications() {
+    if (loading) return;
+
     setLoading(true);
     setMessage("");
 
     try {
-      const permission =
-        await Notification.requestPermission();
+      const { data, error: userError } =
+        await supabase.auth.getUser();
 
-      if (permission !== "granted") {
-        setMessage(
-          "Notification permission was not granted."
-        );
-        return;
-      }
-
-      const { data } = await supabase.auth.getUser();
-
-      if (!data.user) {
-        setMessage(
-          "Please log in before enabling notifications."
-        );
+      if (userError || !data.user) {
+        setMessage("Please log in before enabling notifications.");
         return;
       }
 
@@ -80,8 +84,20 @@ export default function PushNotificationButton() {
         return;
       }
 
-      const registration =
-        await navigator.serviceWorker.ready;
+      const permission = await Notification.requestPermission();
+
+      if (permission !== "granted") {
+        setMessage(
+          permission === "denied"
+            ? "Notifications are blocked. Allow them in your browser settings."
+            : "Notification permission was not granted."
+        );
+        return;
+      }
+
+      const registration = await getServiceWorkerRegistration();
+
+      await navigator.serviceWorker.ready;
 
       let subscription =
         await registration.pushManager.getSubscription();
@@ -90,8 +106,7 @@ export default function PushNotificationButton() {
         subscription =
           await registration.pushManager.subscribe({
             userVisibleOnly: true,
-            applicationServerKey:
-              convertVapidKey(publicKey),
+            applicationServerKey: convertVapidKey(publicKey),
           });
       }
 
@@ -106,7 +121,7 @@ export default function PushNotificationButton() {
         }),
       });
 
-      const result = await response.json();
+      const result = await response.json().catch(() => ({}));
 
       if (!response.ok) {
         throw new Error(
@@ -117,6 +132,8 @@ export default function PushNotificationButton() {
       setEnabled(true);
       setMessage("Notifications enabled successfully.");
     } catch (error) {
+      console.error("Enable notification error:", error);
+
       setMessage(
         error instanceof Error
           ? error.message
@@ -128,15 +145,17 @@ export default function PushNotificationButton() {
   }
 
   async function disableNotifications() {
+    if (loading) return;
+
     setLoading(true);
     setMessage("");
 
     try {
       const registration =
-        await navigator.serviceWorker.ready;
+        await navigator.serviceWorker.getRegistration();
 
       const subscription =
-        await registration.pushManager.getSubscription();
+        await registration?.pushManager.getSubscription();
 
       if (subscription) {
         await fetch("/api/push/unsubscribe", {
@@ -154,7 +173,8 @@ export default function PushNotificationButton() {
 
       setEnabled(false);
       setMessage("Notifications disabled.");
-    } catch {
+    } catch (error) {
+      console.error("Disable notification error:", error);
       setMessage("Unable to disable notifications.");
     } finally {
       setLoading(false);
