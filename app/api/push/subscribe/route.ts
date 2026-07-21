@@ -51,7 +51,10 @@ export async function POST(request: Request) {
       console.error("Push subscription database error:", error);
 
       return NextResponse.json(
-        { error: "Failed to save push subscription." },
+        {
+          error: error.message,
+          details: error,
+        },
         { status: 500 }
       );
     }
