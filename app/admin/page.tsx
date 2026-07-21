@@ -663,6 +663,11 @@ export default function AdminDashboard() {
               text="Approve Reviews"
             />
 
+            <AdminButton
+              href="/admin/notifications"
+              text="Send Push Notifications"
+            />
+
           </div>
 
         </div>
