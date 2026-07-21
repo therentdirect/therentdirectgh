@@ -22,7 +22,6 @@ export default function AdminLayout({
     { name: "Add Property", href: "/admin/properties/new" },
     { name: "Users", href: "/admin/users" },
     { name: "Payments", href: "/admin/payments" },
-    { name: "Apartment Requests", href: "/admin/apartment-requests" },
     { name: "Inspections", href: "/admin/inspections" },
     { name: "Reviews", href: "/admin/reviews" },
     { name: "Analytics", href: "/admin/analytics" },
@@ -60,7 +59,7 @@ export default function AdminLayout({
     const { data: profile } = await supabase
       .from("profiles")
       .select("role")
-      .eq("email", user.email)
+      .eq("id", user.id)
       .maybeSingle();
 
     if (profile?.role !== "admin" && profile?.role !== "super_admin") {

@@ -22,50 +22,9 @@ export default function DashboardLayout({
 
   const [profile, setProfile] = useState<Profile | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [unreadNotifications, setUnreadNotifications] = useState(0);
 
   useEffect(() => {
     loadProfile();
-  }, []);
-
-  useEffect(() => {
-    let notificationChannel:
-      | ReturnType<typeof supabase.channel>
-      | null = null;
-
-    async function setupNotifications() {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (!user) return;
-
-      await loadUnreadNotifications(user.id);
-
-      notificationChannel = supabase
-        .channel(`dashboard-notifications-${user.id}`)
-        .on(
-          "postgres_changes",
-          {
-            event: "*",
-            schema: "public",
-            table: "notifications",
-            filter: `user_id=eq.${user.id}`,
-          },
-          () => {
-            loadUnreadNotifications(user.id);
-          }
-        )
-        .subscribe();
-    }
-
-    setupNotifications();
-
-    return () => {
-      if (notificationChannel) {
-        supabase.removeChannel(notificationChannel);
-      }
-    };
   }, []);
 
   useEffect(() => {
@@ -107,27 +66,6 @@ export default function DashboardLayout({
         username: "",
       }
     );
-  }
-
-  async function loadUnreadNotifications(userId: string) {
-    const { count, error } = await supabase
-      .from("notifications")
-      .select("id", {
-        count: "exact",
-        head: true,
-      })
-      .eq("user_id", userId)
-      .eq("is_read", false);
-
-    if (error) {
-      console.error(
-        "Unread notification count error:",
-        error
-      );
-      return;
-    }
-
-    setUnreadNotifications(count || 0);
   }
 
   async function handleLogout() {
@@ -180,22 +118,13 @@ export default function DashboardLayout({
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`flex items-center justify-between rounded-2xl px-4 py-3 font-bold transition ${
+                  className={`flex items-center rounded-2xl px-4 py-3 font-bold transition ${
                     active
                       ? "bg-yellow-400 text-black shadow-sm"
                       : "text-neutral-600 hover:bg-neutral-100 hover:text-black"
                   }`}
                 >
-                  <span>{item.name}</span>
-
-                  {item.href === "/dashboard/notifications" &&
-                    unreadNotifications > 0 && (
-                      <span className="flex min-w-6 items-center justify-center rounded-full bg-red-500 px-2 py-1 text-[10px] font-black text-white">
-                        {unreadNotifications > 99
-                          ? "99+"
-                          : unreadNotifications}
-                      </span>
-                    )}
+                  {item.name}
                 </Link>
               );
             })}
@@ -240,31 +169,13 @@ export default function DashboardLayout({
               </h2>
             </div>
 
-            <div className="flex items-center gap-3">
-              <Link
-                href="/dashboard/notifications"
-                aria-label="Open notifications"
-                className="relative flex h-12 w-12 items-center justify-center rounded-full bg-neutral-100 text-xl transition hover:bg-yellow-400"
-              >
-                🔔
-
-                {unreadNotifications > 0 && (
-                  <span className="absolute -right-1 -top-1 flex min-h-6 min-w-6 items-center justify-center rounded-full border-2 border-white bg-red-500 px-1 text-[10px] font-black text-white">
-                    {unreadNotifications > 99
-                      ? "99+"
-                      : unreadNotifications}
-                  </span>
-                )}
-              </Link>
-
-              <button
-                type="button"
-                onClick={() => setMobileMenuOpen(true)}
-                className="rounded-full bg-black px-5 py-3 text-sm font-black text-white lg:hidden"
-              >
-                Menu
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen(true)}
+              className="rounded-full bg-black px-5 py-3 text-sm font-black text-white lg:hidden"
+            >
+              Menu
+            </button>
 
             <div className="hidden rounded-full bg-green-100 px-4 py-2 text-sm font-bold text-green-700 lg:block">
               Online
@@ -320,23 +231,13 @@ export default function DashboardLayout({
                         key={item.href}
                         href={item.href}
                         onClick={() => setMobileMenuOpen(false)}
-                        className={`flex items-center justify-between rounded-2xl px-4 py-4 font-black ${
+                        className={`block rounded-2xl px-4 py-4 font-black ${
                           active
                             ? "bg-yellow-400 text-black"
                             : "bg-neutral-50 text-neutral-700"
                         }`}
                       >
-                        <span>{item.name}</span>
-
-                        {item.href ===
-                          "/dashboard/notifications" &&
-                          unreadNotifications > 0 && (
-                            <span className="flex min-w-6 items-center justify-center rounded-full bg-red-500 px-2 py-1 text-[10px] font-black text-white">
-                              {unreadNotifications > 99
-                                ? "99+"
-                                : unreadNotifications}
-                            </span>
-                          )}
+                        {item.name}
                       </Link>
                     );
                   })}
