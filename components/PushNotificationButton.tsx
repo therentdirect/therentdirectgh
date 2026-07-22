@@ -33,6 +33,7 @@ async function getServiceWorkerRegistration() {
 export default function PushNotificationButton() {
   const [supported, setSupported] = useState(false);
   const [enabled, setEnabled] = useState(false);
+  const [checking, setChecking] = useState(true);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
@@ -45,7 +46,10 @@ export default function PushNotificationButton() {
 
       setSupported(isSupported);
 
-      if (!isSupported) return;
+      if (!isSupported) {
+        setChecking(false);
+        return;
+      }
 
       try {
         const registration = await getServiceWorkerRegistration();
@@ -55,6 +59,8 @@ export default function PushNotificationButton() {
         setEnabled(Boolean(subscription));
       } catch (error) {
         console.error("Notification status check failed:", error);
+      } finally {
+        setChecking(false);
       }
     }
 
@@ -185,7 +191,7 @@ export default function PushNotificationButton() {
     }
   }
 
-  if (!supported || enabled) return null;
+  if (checking || !supported || enabled) return null;
 
   return (
     <div className="fixed bottom-20 right-5 z-[100]">
